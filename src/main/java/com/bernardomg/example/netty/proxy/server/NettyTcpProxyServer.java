@@ -130,6 +130,10 @@ public final class NettyTcpProxyServer implements Server {
         final Bootstrap     bootstrap;
         final ChannelFuture channelFuture;
 
+        log.trace("Starting client");
+
+        log.debug("Connecting to {}:{}", targetHost, targetPort);
+        
         bootstrap = new Bootstrap();
         bootstrap
             // Registers groups
@@ -154,6 +158,8 @@ public final class NettyTcpProxyServer implements Server {
             log.debug("Connected correctly to {}:{}", targetHost, targetPort);
         }
 
+        log.trace("Started client");
+        
         return channelFuture.channel();
     }
 
