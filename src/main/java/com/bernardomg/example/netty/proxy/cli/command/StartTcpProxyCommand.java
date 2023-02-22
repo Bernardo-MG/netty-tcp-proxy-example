@@ -27,7 +27,7 @@ package com.bernardomg.example.netty.proxy.cli.command;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
-import com.bernardomg.example.netty.proxy.cli.CliWriterTransactionListener;
+import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 import com.bernardomg.example.netty.proxy.server.NettyTcpProxyServer;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
@@ -102,7 +102,7 @@ public final class StartTcpProxyCommand implements Runnable {
             writer = new PrintWriter(OutputStream.nullOutputStream());
         }
 
-        listener = new CliWriterTransactionListener(port, targetHost, targetPort, writer);
+        listener = new CliWriterProxyListener(port, targetHost, targetPort, writer);
         server = new NettyTcpProxyServer(port, targetHost, targetPort, listener);
 
         server.start();

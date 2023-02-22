@@ -30,12 +30,12 @@ import java.util.Objects;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 /**
- * Server listener which will write the context of each step into the CLI console.
+ * Proxy listener which will write the context of each step into the CLI console.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public final class CliWriterTransactionListener implements ProxyListener {
+public final class CliWriterProxyListener implements ProxyListener {
 
     /**
      * Port which the server will listen to.
@@ -51,7 +51,7 @@ public final class CliWriterTransactionListener implements ProxyListener {
      */
     private final PrintWriter writer;
 
-    public CliWriterTransactionListener(final Integer prt, final String trgtHost, final Integer trgtPort,
+    public CliWriterProxyListener(final Integer prt, final String trgtHost, final Integer trgtPort,
             final PrintWriter writ) {
         super();
 
