@@ -72,11 +72,11 @@ public final class CliWriterTransactionListener implements ProxyListener {
     }
 
     @Override
-    public final void onSend(final String message) {
+    public final void onClientSend(final String message) {
         if (message.isEmpty()) {
-            writer.println("Sent no message");
+            writer.println("Client sent no message");
         } else {
-            writer.printf("Sent message: %s", message);
+            writer.printf("Client sent message: %s", message);
             writer.println();
         }
     }
@@ -87,6 +87,16 @@ public final class CliWriterTransactionListener implements ProxyListener {
             writer.println("Server received no message");
         } else {
             writer.printf("Server received message: %s", message);
+            writer.println();
+        }
+    }
+
+    @Override
+    public final void onServerSend(final String message) {
+        if (message.isEmpty()) {
+            writer.println("Server sent no message");
+        } else {
+            writer.printf("Server sent message: %s", message);
             writer.println();
         }
     }

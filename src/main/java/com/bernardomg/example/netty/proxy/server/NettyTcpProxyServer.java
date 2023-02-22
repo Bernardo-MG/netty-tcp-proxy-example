@@ -202,7 +202,21 @@ public final class NettyTcpProxyServer implements Server {
      *            response received
      */
     private final void handleClientResponse(final ChannelHandlerContext ctx, final String message) {
+        log.debug("Handling client response");
+
+        log.debug("Received client response: {}", message);
+
         listener.onClientReceive(message);
+
+        channelGroup.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
+            .addListener(future -> {
+                if (future.isSuccess()) {
+                    log.debug("Successful server channel future");
+                    listener.onClientSend(message);
+                } else {
+                    log.debug("Failed server channel future");
+                }
+            });
     }
 
     /**
@@ -223,10 +237,10 @@ public final class NettyTcpProxyServer implements Server {
         clientChannel.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
             .addListener(future -> {
                 if (future.isSuccess()) {
-                    log.debug("Successful request future");
-                    listener.onSend(message);
+                    log.debug("Successful client channel future");
+                    listener.onServerSend(message);
                 } else {
-                    log.debug("Failed request future");
+                    log.debug("Failed client channel future");
                 }
             });
     }
