@@ -33,6 +33,7 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +68,14 @@ public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler
     @Override
     public final void channelActive(final ChannelHandlerContext ctx) {
         clientChannel = clientChannelSupplier.apply(this::handleClientResponse);
+    }
+
+    @Override
+    public final void channelInactive(final ChannelHandlerContext ctx) {
+        if (clientChannel.isActive()) {
+            clientChannel.writeAndFlush(Unpooled.EMPTY_BUFFER)
+                .addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     @Override
