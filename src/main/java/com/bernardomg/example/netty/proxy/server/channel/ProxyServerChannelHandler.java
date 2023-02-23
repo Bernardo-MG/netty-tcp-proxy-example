@@ -25,7 +25,8 @@
 package com.bernardomg.example.netty.proxy.server.channel;
 
 import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
@@ -44,16 +45,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler<String> {
 
-    private Channel                 clientChannel;
+    private Channel                                                            clientChannel;
 
-    private final Supplier<Channel> clientChannelSupplier;
+    private final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSupplier;
 
     /**
      * Proxy listener. Extension hook which allows reacting to the server events.
      */
-    private final ProxyListener     listener;
+    private final ProxyListener                                                listener;
 
-    public ProxyServerChannelHandler(final ProxyListener lstn, final Supplier<Channel> clientChannelSup) {
+    private ChannelHandlerContext                                              serverContext;
+
+    public ProxyServerChannelHandler(final ProxyListener lstn,
+            final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSup) {
         super();
 
         listener = Objects.requireNonNull(lstn);
@@ -61,8 +65,8 @@ public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler
     }
 
     @Override
-    public void channelActive(final ChannelHandlerContext ctx) {
-        clientChannel = clientChannelSupplier.get();
+    public final void channelActive(final ChannelHandlerContext ctx) {
+        clientChannel = clientChannelSupplier.apply(this::handleClientResponse);
     }
 
     @Override
@@ -81,6 +85,27 @@ public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler
                     listener.onServerSend(message);
                 } else {
                     log.debug("Failed client channel future");
+                }
+            });
+
+        serverContext = ctx;
+    }
+
+    private final void handleClientResponse(final ChannelHandlerContext ctx, final String message) {
+        log.debug("Handling client response");
+
+        log.debug("Received client response: {}", message);
+
+        listener.onClientReceive(message);
+
+        // Redirect to the source server
+        serverContext.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
+            .addListener(future -> {
+                if (future.isSuccess()) {
+                    log.debug("Successful server channel future");
+                    listener.onClientSend(message);
+                } else {
+                    log.debug("Failed server channel future");
                 }
             });
     }

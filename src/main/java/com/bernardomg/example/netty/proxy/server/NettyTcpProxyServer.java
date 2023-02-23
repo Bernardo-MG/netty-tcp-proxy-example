@@ -25,6 +25,7 @@
 package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 import com.bernardomg.example.netty.proxy.server.channel.ProxyChannelInitializer;
@@ -122,7 +123,7 @@ public final class NettyTcpProxyServer implements Server {
         log.trace("Stopped proxy");
     }
 
-    private final Channel getClientChannel() {
+    private final Channel getClientChannel(final BiConsumer<ChannelHandlerContext, String> lstn) {
         final Bootstrap     bootstrap;
         final ChannelFuture channelFuture;
 
@@ -139,7 +140,7 @@ public final class NettyTcpProxyServer implements Server {
             // Configuration
             .option(ChannelOption.SO_KEEPALIVE, true)
             // Sets channel initializer which listens for responses
-            .handler(new MessageListenerChannelInitializer(this::handleClientResponse));
+            .handler(new MessageListenerChannelInitializer(lstn));
 
         try {
             log.debug("Connecting to {}:{}", targetHost, targetPort);
@@ -175,7 +176,7 @@ public final class NettyTcpProxyServer implements Server {
             .childOption(ChannelOption.SO_KEEPALIVE, true)
             .childOption(ChannelOption.TCP_NODELAY, true)
             // Child handler
-            .childHandler(new ProxyChannelInitializer(listener, () -> getClientChannel()));
+            .childHandler(new ProxyChannelInitializer(listener, (l) -> getClientChannel(l)));
 
         try {
             // Binds to the port
@@ -195,31 +196,6 @@ public final class NettyTcpProxyServer implements Server {
         }
 
         return channelFuture.channel();
-    }
-
-    /**
-     * Channel response event listener. Will receive any response sent by the server.
-     *
-     * @param message
-     *            response received
-     */
-    private final void handleClientResponse(final ChannelHandlerContext ctx, final String message) {
-        log.debug("Handling client response");
-
-        log.debug("Received client response: {}", message);
-
-        listener.onClientReceive(message);
-
-        // Redirect to the source server
-        // channelGroup.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
-        // .addListener(future -> {
-        // if (future.isSuccess()) {
-        // log.debug("Successful server channel future");
-        // listener.onClientSend(message);
-        // } else {
-        // log.debug("Failed server channel future");
-        // }
-        // });
     }
 
 }

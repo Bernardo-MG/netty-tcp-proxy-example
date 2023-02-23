@@ -25,11 +25,13 @@
 package com.bernardomg.example.netty.proxy.server.channel;
 
 import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
@@ -44,14 +46,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ProxyChannelInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final Supplier<Channel> clientChannelSupplier;
+    private final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSupplier;
 
     /**
      * Proxy listener. Extension hook which allows reacting to the server events.
      */
-    private final ProxyListener     listener;
+    private final ProxyListener                                                listener;
 
-    public ProxyChannelInitializer(final ProxyListener lstn, final Supplier<Channel> clientChannelSup) {
+    public ProxyChannelInitializer(final ProxyListener lstn,
+            final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSup) {
         super();
 
         listener = Objects.requireNonNull(lstn);
