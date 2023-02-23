@@ -39,7 +39,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Message listener channel handler. Will send any message to the contained listener.
+ * Channel handler ready to proxy requests. Will move request between a server, which is the owner of this listener, and
+ * an embedded client.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -47,8 +48,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler<String> {
 
+    /**
+     * Embedded client connection.
+     */
     private Channel                                                            clientChannel;
 
+    /**
+     * Supplier to acquire the client connection.
+     */
     private final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSupplier;
 
     /**
@@ -56,6 +63,9 @@ public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler
      */
     private final ProxyListener                                                listener;
 
+    /**
+     * Server request context. Required to redirect messages received by the client.
+     */
     private ChannelHandlerContext                                              serverContext;
 
     public ProxyServerChannelHandler(final String hst, final Integer prt, final ProxyListener lstn) {

@@ -34,7 +34,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Initializes the channel with a message listener. Any message received by the channel will be sent to the listener.
+ * Initializes the channel for a proxy.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
