@@ -67,7 +67,7 @@ public final class ProxyChannelInitializer extends ChannelInitializer<SocketChan
             // Transforms message into a string
             .addLast("decoder", new StringDecoder())
             // Adds event logger
-            .addLast(new EventLoggerChannelHandler())
+            .addLast(new EventLoggerChannelHandler("server"))
             // Adds listener handler
             .addLast(new ProxyServerChannelHandler(host, port, listener));
 
