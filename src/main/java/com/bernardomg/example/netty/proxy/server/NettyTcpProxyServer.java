@@ -26,21 +26,17 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
+import com.bernardomg.example.netty.proxy.server.channel.ProxyChannelInitializer;
 
-import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,8 +52,6 @@ public final class NettyTcpProxyServer implements Server {
     private EventLoopGroup       bossLoopGroup;
 
     private ChannelGroup         channelGroup;
-
-    private Channel              clientChannel;
 
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
@@ -95,8 +89,6 @@ public final class NettyTcpProxyServer implements Server {
 
         listener.onStart();
 
-        clientChannel = getClientChannel();
-
         // Initializes groups
         bossLoopGroup = new NioEventLoopGroup();
         channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
@@ -126,43 +118,6 @@ public final class NettyTcpProxyServer implements Server {
         log.trace("Stopped proxy");
     }
 
-    private final Channel getClientChannel() {
-        final Bootstrap     bootstrap;
-        final ChannelFuture channelFuture;
-
-        log.trace("Starting client");
-
-        log.debug("Connecting to {}:{}", targetHost, targetPort);
-        
-        bootstrap = new Bootstrap();
-        bootstrap
-            // Registers groups
-            .group(eventLoopGroup)
-            // Defines channel
-            .channel(NioSocketChannel.class)
-            // Configuration
-            .option(ChannelOption.SO_KEEPALIVE, true)
-            // Sets channel initializer which listens for responses
-            .handler(new MessageListenerChannelInitializer(this::handleClientResponse));
-
-        try {
-            log.debug("Connecting to {}:{}", targetHost, targetPort);
-            channelFuture = bootstrap.connect(targetHost, targetPort)
-                .sync();
-        } catch (final InterruptedException e) {
-            log.error(e.getLocalizedMessage(), e);
-            throw new RuntimeException(e);
-        }
-
-        if (channelFuture.isSuccess()) {
-            log.debug("Connected correctly to {}:{}", targetHost, targetPort);
-        }
-
-        log.trace("Started client");
-        
-        return channelFuture.channel();
-    }
-
     private final Channel getServerChannel() {
         final ServerBootstrap bootstrap;
         final ChannelFuture   channelFuture;
@@ -179,7 +134,7 @@ public final class NettyTcpProxyServer implements Server {
             .childOption(ChannelOption.SO_KEEPALIVE, true)
             .childOption(ChannelOption.TCP_NODELAY, true)
             // Child handler
-            .childHandler(new MessageListenerChannelInitializer(this::handleServerRequest));
+            .childHandler(new ProxyChannelInitializer(targetHost, targetPort, listener));
 
         try {
             // Binds to the port
@@ -199,56 +154,6 @@ public final class NettyTcpProxyServer implements Server {
         }
 
         return channelFuture.channel();
-    }
-
-    /**
-     * Channel response event listener. Will receive any response sent by the server.
-     *
-     * @param message
-     *            response received
-     */
-    private final void handleClientResponse(final ChannelHandlerContext ctx, final String message) {
-        log.debug("Handling client response");
-
-        log.debug("Received client response: {}", message);
-
-        listener.onClientReceive(message);
-
-        channelGroup.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful server channel future");
-                    listener.onClientSend(message);
-                } else {
-                    log.debug("Failed server channel future");
-                }
-            });
-    }
-
-    /**
-     * Request event internal listener. Will receive any request sent by the client.
-     *
-     * @param ctx
-     *            channel context
-     * @param message
-     *            received request body
-     */
-    private final void handleServerRequest(final ChannelHandlerContext ctx, final String message) {
-        log.debug("Handling server request");
-
-        log.debug("Received server request: {}", message);
-
-        listener.onServerReceive(message);
-
-        clientChannel.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful client channel future");
-                    listener.onServerSend(message);
-                } else {
-                    log.debug("Failed client channel future");
-                }
-            });
     }
 
 }
