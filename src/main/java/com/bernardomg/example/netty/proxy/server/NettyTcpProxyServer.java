@@ -27,10 +27,10 @@ package com.bernardomg.example.netty.proxy.server;
 import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
+import com.bernardomg.example.netty.proxy.server.channel.ProxyChannelInitializer;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -56,8 +56,6 @@ public final class NettyTcpProxyServer implements Server {
     private EventLoopGroup       bossLoopGroup;
 
     private ChannelGroup         channelGroup;
-
-    private Channel              clientChannel;
 
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
@@ -95,8 +93,6 @@ public final class NettyTcpProxyServer implements Server {
 
         listener.onStart();
 
-        clientChannel = getClientChannel();
-
         // Initializes groups
         bossLoopGroup = new NioEventLoopGroup();
         channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
@@ -133,7 +129,7 @@ public final class NettyTcpProxyServer implements Server {
         log.trace("Starting client");
 
         log.debug("Connecting to {}:{}", targetHost, targetPort);
-        
+
         bootstrap = new Bootstrap();
         bootstrap
             // Registers groups
@@ -159,7 +155,7 @@ public final class NettyTcpProxyServer implements Server {
         }
 
         log.trace("Started client");
-        
+
         return channelFuture.channel();
     }
 
@@ -179,7 +175,7 @@ public final class NettyTcpProxyServer implements Server {
             .childOption(ChannelOption.SO_KEEPALIVE, true)
             .childOption(ChannelOption.TCP_NODELAY, true)
             // Child handler
-            .childHandler(new MessageListenerChannelInitializer(this::handleServerRequest));
+            .childHandler(new ProxyChannelInitializer(listener, () -> getClientChannel()));
 
         try {
             // Binds to the port
@@ -214,41 +210,16 @@ public final class NettyTcpProxyServer implements Server {
 
         listener.onClientReceive(message);
 
-        channelGroup.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful server channel future");
-                    listener.onClientSend(message);
-                } else {
-                    log.debug("Failed server channel future");
-                }
-            });
-    }
-
-    /**
-     * Request event internal listener. Will receive any request sent by the client.
-     *
-     * @param ctx
-     *            channel context
-     * @param message
-     *            received request body
-     */
-    private final void handleServerRequest(final ChannelHandlerContext ctx, final String message) {
-        log.debug("Handling server request");
-
-        log.debug("Received server request: {}", message);
-
-        listener.onServerReceive(message);
-
-        clientChannel.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful client channel future");
-                    listener.onServerSend(message);
-                } else {
-                    log.debug("Failed client channel future");
-                }
-            });
+        // Redirect to the source server
+        // channelGroup.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
+        // .addListener(future -> {
+        // if (future.isSuccess()) {
+        // log.debug("Successful server channel future");
+        // listener.onClientSend(message);
+        // } else {
+        // log.debug("Failed server channel future");
+        // }
+        // });
     }
 
 }
