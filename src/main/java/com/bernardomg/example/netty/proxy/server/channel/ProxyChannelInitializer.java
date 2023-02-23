@@ -25,13 +25,9 @@
 package com.bernardomg.example.netty.proxy.server.channel;
 
 import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
@@ -46,19 +42,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ProxyChannelInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSupplier;
+    private final String        host;
 
     /**
      * Proxy listener. Extension hook which allows reacting to the server events.
      */
-    private final ProxyListener                                                listener;
+    private final ProxyListener listener;
 
-    public ProxyChannelInitializer(final ProxyListener lstn,
-            final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSup) {
+    private final Integer       port;
+
+    public ProxyChannelInitializer(final String hst, final Integer prt, final ProxyListener lstn) {
         super();
 
+        host = Objects.requireNonNull(hst);
+        port = Objects.requireNonNull(prt);
         listener = Objects.requireNonNull(lstn);
-        clientChannelSupplier = Objects.requireNonNull(clientChannelSup);
     }
 
     @Override
@@ -71,7 +69,7 @@ public final class ProxyChannelInitializer extends ChannelInitializer<SocketChan
             // Adds event logger
             .addLast(new EventLoggerChannelHandler())
             // Adds listener handler
-            .addLast(new ProxyServerChannelHandler(listener, clientChannelSupplier));
+            .addLast(new ProxyServerChannelHandler(host, port, listener));
 
         log.debug("Initialized channel");
     }

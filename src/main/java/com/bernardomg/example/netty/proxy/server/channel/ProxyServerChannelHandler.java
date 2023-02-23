@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import com.bernardomg.example.netty.proxy.server.ChannelProducer;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import io.netty.buffer.Unpooled;
@@ -56,12 +57,11 @@ public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler
 
     private ChannelHandlerContext                                              serverContext;
 
-    public ProxyServerChannelHandler(final ProxyListener lstn,
-            final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSup) {
+    public ProxyServerChannelHandler(final String hst, final Integer prt, final ProxyListener lstn) {
         super();
 
         listener = Objects.requireNonNull(lstn);
-        clientChannelSupplier = Objects.requireNonNull(clientChannelSup);
+        clientChannelSupplier = new ChannelProducer(hst, prt);
     }
 
     @Override
