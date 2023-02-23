@@ -25,8 +25,6 @@
 package com.bernardomg.example.netty.proxy.server.channel;
 
 import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import com.bernardomg.example.netty.proxy.server.ChannelProducer;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
@@ -51,33 +49,33 @@ public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler
     /**
      * Embedded client connection.
      */
-    private Channel                                                            clientChannel;
+    private Channel               clientChannel;
 
     /**
      * Supplier to acquire the client connection.
      */
-    private final Function<BiConsumer<ChannelHandlerContext, String>, Channel> clientChannelSupplier;
+    private final ChannelProducer clientChannelSupplier;
 
     /**
      * Proxy listener. Extension hook which allows reacting to the server events.
      */
-    private final ProxyListener                                                listener;
+    private final ProxyListener   listener;
 
     /**
      * Server request context. Required to redirect messages received by the client.
      */
-    private ChannelHandlerContext                                              serverContext;
+    private ChannelHandlerContext serverContext;
 
     public ProxyServerChannelHandler(final String hst, final Integer prt, final ProxyListener lstn) {
         super();
 
         listener = Objects.requireNonNull(lstn);
-        clientChannelSupplier = new ChannelProducer(hst, prt);
+        clientChannelSupplier = new ChannelProducer(hst, prt, this::handleClientResponse);
     }
 
     @Override
     public final void channelActive(final ChannelHandlerContext ctx) {
-        clientChannel = clientChannelSupplier.apply(this::handleClientResponse);
+        clientChannel = clientChannelSupplier.get();
     }
 
     @Override

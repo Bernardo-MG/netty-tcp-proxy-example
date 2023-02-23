@@ -26,7 +26,7 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
@@ -41,23 +41,26 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class ChannelProducer implements Function<BiConsumer<ChannelHandlerContext, String>, Channel> {
+public final class ChannelProducer implements Supplier<Channel> {
 
-    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    private final EventLoopGroup                            eventLoopGroup = new NioEventLoopGroup();
 
-    private final String         host;
+    private final String                                    host;
 
-    private final Integer        port;
+    private final BiConsumer<ChannelHandlerContext, String> listener;
 
-    public ChannelProducer(final String hst, final Integer prt) {
+    private final Integer                                   port;
+
+    public ChannelProducer(final String hst, final Integer prt, final BiConsumer<ChannelHandlerContext, String> lstn) {
         super();
 
         host = Objects.requireNonNull(hst);
         port = Objects.requireNonNull(prt);
+        listener = Objects.requireNonNull(lstn);
     }
 
     @Override
-    public final Channel apply(final BiConsumer<ChannelHandlerContext, String> lstn) {
+    public final Channel get() {
         final Bootstrap     bootstrap;
         final ChannelFuture channelFuture;
 
@@ -74,7 +77,7 @@ public final class ChannelProducer implements Function<BiConsumer<ChannelHandler
             // Configuration
             .option(ChannelOption.SO_KEEPALIVE, true)
             // Sets channel initializer which listens for responses
-            .handler(new MessageListenerChannelInitializer(lstn));
+            .handler(new MessageListenerChannelInitializer(listener));
 
         try {
             log.debug("Connecting to {}:{}", host, port);
