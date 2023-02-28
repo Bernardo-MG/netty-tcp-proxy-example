@@ -32,6 +32,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -68,8 +69,8 @@ public final class ProxyChannelInitializer extends ChannelInitializer<SocketChan
             // Transforms message into a string
             .addLast("encoder", new StringEncoder())
             .addLast("decoder", new StringDecoder())
-            // Adds event logger
-            .addLast(new EventLoggerChannelHandler("server"))
+            // Logging handler
+            .addLast(new LoggingHandler())
             // Adds listener handler
             .addLast(new ProxyServerChannelHandler(host, port, listener));
 
