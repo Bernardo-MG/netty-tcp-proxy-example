@@ -56,7 +56,7 @@ public final class NettyTcpProxyServer implements Server {
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
     /**
-     * Server listener. Extension hook which allows reacting to the server events.
+     * Proxy listener. Extension hook which allows reacting to the proxy events.
      */
     private final ProxyListener  listener;
 
