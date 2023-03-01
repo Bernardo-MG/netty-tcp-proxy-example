@@ -128,6 +128,11 @@ public final class NettyTcpProxyServer implements Server {
         log.trace("Stopped proxy");
     }
 
+    /**
+     * Starts a server connection and returns a channel.
+     * 
+     * @return channel for the server
+     */
     private final Channel connectoToServer() {
         final ServerBootstrap bootstrap;
         final ChannelFuture   channelFuture;
