@@ -28,9 +28,7 @@ import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
@@ -81,8 +79,7 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
     public final void channelInactive(final ChannelHandlerContext ctx) {
         if (clientChannel.isActive()) {
             log.debug("Closing client");
-            clientChannel.writeAndFlush(Unpooled.EMPTY_BUFFER)
-                .addListener(ChannelFutureListener.CLOSE);
+            clientChannel.close();
         }
     }
 
