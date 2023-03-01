@@ -22,28 +22,20 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.proxy.server;
+package com.bernardomg.example.netty.proxy.server.channel;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-
-import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
+import java.util.function.Function;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class ChannelProducer implements Supplier<Channel> {
-
-    private final EventLoopGroup                            eventLoopGroup = new NioEventLoopGroup();
+public final class ChannelProducer implements Function<ChannelHandlerContext, Channel> {
 
     private final String                                    host;
 
@@ -60,9 +52,11 @@ public final class ChannelProducer implements Supplier<Channel> {
     }
 
     @Override
-    public final Channel get() {
-        final Bootstrap     bootstrap;
-        final ChannelFuture channelFuture;
+    public final Channel apply(final ChannelHandlerContext ctx) {
+        final Bootstrap bootstrap;
+        final Channel   contextChannel;
+
+        contextChannel = ctx.channel();
 
         log.trace("Starting client");
 
@@ -71,30 +65,17 @@ public final class ChannelProducer implements Supplier<Channel> {
         bootstrap = new Bootstrap();
         bootstrap
             // Registers groups
-            .group(eventLoopGroup)
+            .group(contextChannel.eventLoop())
             // Defines channel
-            .channel(NioSocketChannel.class)
+            .channel(ctx.channel()
+                .getClass())
             // Configuration
-            .option(ChannelOption.SO_KEEPALIVE, true)
+            .option(ChannelOption.AUTO_READ, false)
             // Sets channel initializer which listens for responses
             .handler(new MessageListenerChannelInitializer(listener));
 
-        try {
-            log.debug("Connecting to {}:{}", host, port);
-            channelFuture = bootstrap.connect(host, port)
-                .sync();
-        } catch (final InterruptedException e) {
-            log.error(e.getLocalizedMessage(), e);
-            throw new RuntimeException(e);
-        }
-
-        if (channelFuture.isSuccess()) {
-            log.debug("Connected correctly to {}:{}", host, port);
-        }
-
-        log.trace("Started client");
-
-        return channelFuture.channel();
+        return bootstrap.connect(host, port)
+            .channel();
     }
 
 }

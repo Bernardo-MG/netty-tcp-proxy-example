@@ -30,8 +30,6 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,9 +64,6 @@ public final class ProxyChannelInitializer extends ChannelInitializer<SocketChan
         log.debug("Initializing channel");
 
         ch.pipeline()
-            // Transforms message into a string
-            .addLast("encoder", new StringEncoder())
-            .addLast("decoder", new StringDecoder())
             // Logging handler
             .addLast(new LoggingHandler())
             // Adds listener handler

@@ -26,14 +26,13 @@ package com.bernardomg.example.netty.proxy.server.channel;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.ChannelProducer;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler<String> {
+public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * Embedded client connection.
@@ -75,19 +74,20 @@ public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler
 
     @Override
     public final void channelActive(final ChannelHandlerContext ctx) {
-        clientChannel = clientChannelSupplier.get();
+        clientChannel = clientChannelSupplier.apply(ctx);
     }
 
     @Override
     public final void channelInactive(final ChannelHandlerContext ctx) {
         if (clientChannel.isActive()) {
+            log.debug("Closing client");
             clientChannel.writeAndFlush(Unpooled.EMPTY_BUFFER)
                 .addListener(ChannelFutureListener.CLOSE);
         }
     }
 
     @Override
-    public final void channelRead0(final ChannelHandlerContext ctx, final String message) throws Exception {
+    public final void channelRead(final ChannelHandlerContext ctx, final Object message) throws Exception {
         log.debug("Handling server request");
 
         log.debug("Received server request: {}", message);
@@ -95,7 +95,7 @@ public final class ProxyServerChannelHandler extends SimpleChannelInboundHandler
         listener.onServerReceive(message);
 
         // Redirect to the target client
-        clientChannel.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
+        clientChannel.writeAndFlush(message)
             .addListener(future -> {
                 if (future.isSuccess()) {
                     log.debug("Successful client channel future");

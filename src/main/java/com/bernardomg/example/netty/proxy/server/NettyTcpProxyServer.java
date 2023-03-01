@@ -130,7 +130,7 @@ public final class NettyTcpProxyServer implements Server {
 
     /**
      * Starts a server connection and returns a channel.
-     * 
+     *
      * @return channel for the server
      */
     private final Channel connectoToServer() {
