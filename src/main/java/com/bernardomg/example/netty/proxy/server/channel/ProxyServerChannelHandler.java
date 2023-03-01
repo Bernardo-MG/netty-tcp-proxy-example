@@ -108,7 +108,7 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
         serverContext = ctx;
     }
 
-    private final void handleClientResponse(final ChannelHandlerContext ctx, final String message) {
+    private final void handleClientResponse(final ChannelHandlerContext ctx, final Object message) {
         log.debug("Handling client response");
 
         log.debug("Received client response: {}", message);
@@ -116,7 +116,7 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
         listener.onClientReceive(message);
 
         // Redirect to the source server
-        serverContext.writeAndFlush(Unpooled.wrappedBuffer(message.getBytes()))
+        serverContext.writeAndFlush(message)
             .addListener(future -> {
                 if (future.isSuccess()) {
                     log.debug("Successful server channel future");

@@ -47,9 +47,9 @@ public final class MessageListenerChannelInitializer extends ChannelInitializer<
     /**
      * Message listener. This will receive any response from the channel.
      */
-    private final BiConsumer<ChannelHandlerContext, String> listener;
+    private final BiConsumer<ChannelHandlerContext, Object> listener;
 
-    public MessageListenerChannelInitializer(final BiConsumer<ChannelHandlerContext, String> lstn) {
+    public MessageListenerChannelInitializer(final BiConsumer<ChannelHandlerContext, Object> lstn) {
         super();
 
         listener = Objects.requireNonNull(lstn);

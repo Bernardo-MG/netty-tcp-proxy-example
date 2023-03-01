@@ -39,11 +39,11 @@ public final class ChannelProducer implements Function<ChannelHandlerContext, Ch
 
     private final String                                    host;
 
-    private final BiConsumer<ChannelHandlerContext, String> listener;
+    private final BiConsumer<ChannelHandlerContext, Object> listener;
 
     private final Integer                                   port;
 
-    public ChannelProducer(final String hst, final Integer prt, final BiConsumer<ChannelHandlerContext, String> lstn) {
+    public ChannelProducer(final String hst, final Integer prt, final BiConsumer<ChannelHandlerContext, Object> lstn) {
         super();
 
         host = Objects.requireNonNull(hst);
