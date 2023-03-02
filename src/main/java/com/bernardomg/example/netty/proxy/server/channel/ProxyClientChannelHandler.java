@@ -78,12 +78,12 @@ public final class ProxyClientChannelHandler extends ChannelInboundHandlerAdapte
         serverChannel.writeAndFlush(msg)
             .addListener(future -> {
                 if (future.isSuccess()) {
-                    log.debug("Successful server channel future");
+                    log.debug("Successful client channel future");
                     listener.onClientSend(msg);
                     ctx.channel()
                         .read();
                 } else {
-                    log.debug("Failed server channel future");
+                    log.debug("Failed client channel future");
                 }
             });
     }
