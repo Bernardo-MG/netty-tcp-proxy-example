@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public final class ProxyChannelInitializer extends ChannelInitializer<SocketChannel> {
+public final class ProxyServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     private final String        host;
 
@@ -51,7 +51,7 @@ public final class ProxyChannelInitializer extends ChannelInitializer<SocketChan
 
     private final Integer       port;
 
-    public ProxyChannelInitializer(final String hst, final Integer prt, final ProxyListener lstn) {
+    public ProxyServerChannelInitializer(final String hst, final Integer prt, final ProxyListener lstn) {
         super();
 
         host = Objects.requireNonNull(hst);

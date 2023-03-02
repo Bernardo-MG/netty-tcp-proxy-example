@@ -26,7 +26,7 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.channel.ProxyChannelInitializer;
+import com.bernardomg.example.netty.proxy.server.channel.ProxyServerChannelInitializer;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -149,7 +149,7 @@ public final class NettyTcpProxyServer implements Server {
             .childOption(ChannelOption.SO_KEEPALIVE, true)
             .childOption(ChannelOption.TCP_NODELAY, true)
             // Child handler
-            .childHandler(new ProxyChannelInitializer(targetHost, targetPort, listener));
+            .childHandler(new ProxyServerChannelInitializer(targetHost, targetPort, listener));
 
         try {
             // Binds to the port
