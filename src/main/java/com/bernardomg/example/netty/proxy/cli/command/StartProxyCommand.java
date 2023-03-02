@@ -27,6 +27,9 @@ package com.bernardomg.example.netty.proxy.cli.command;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+
 import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 import com.bernardomg.example.netty.proxy.server.NettyTcpProxyServer;
@@ -49,6 +52,12 @@ import picocli.CommandLine.Spec;
 @Command(name = "start", description = "Starts a TCP proxy", mixinStandardHelpOptions = true,
         versionProvider = ManifestVersionProvider.class)
 public final class StartProxyCommand implements Runnable {
+
+    /**
+     * Debug flag. Shows debug logs.
+     */
+    @Option(names = { "--debug" }, paramLabel = "flag", description = "Enable debug logs.", defaultValue = "false")
+    private Boolean     debug;
 
     /**
      * Server port.
@@ -94,6 +103,10 @@ public final class StartProxyCommand implements Runnable {
         final Server        server;
         final ProxyListener listener;
 
+        if (debug) {
+            activateDebugLog();
+        }
+
         if (verbose) {
             // Prints to console
             writer = spec.commandLine()
@@ -107,6 +120,14 @@ public final class StartProxyCommand implements Runnable {
         server = new NettyTcpProxyServer(port, targetHost, targetPort, listener);
 
         server.start();
+    }
+
+    /**
+     * Activates debug logs for the application.
+     */
+    private final void activateDebugLog() {
+        Configurator.setLevel("com.bernardomg.example", Level.DEBUG);
+        Configurator.setLevel("io.netty.handler.logging", Level.DEBUG);
     }
 
 }
