@@ -27,6 +27,9 @@ package com.bernardomg.example.netty.proxy.server.channel;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
+import com.bernardomg.example.netty.proxy.server.ProxyListener;
+
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
@@ -40,16 +43,29 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public final class MessageListenerChannelInitializer extends ChannelInitializer<SocketChannel> {
+public final class ProxyClientChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     /**
      * Message listener. This will receive any response from the channel.
      */
-    private final BiConsumer<ChannelHandlerContext, Object> listener;
+    private final BiConsumer<ChannelHandlerContext, Object> consumer;
 
-    public MessageListenerChannelInitializer(final BiConsumer<ChannelHandlerContext, Object> lstn) {
+    /**
+     * Proxy listener. Extension hook which allows reacting to the server events.
+     */
+    private final ProxyListener                             listener;
+
+    /**
+     * Embedded server connection.
+     */
+    private final Channel                                   serverChannel;
+
+    public ProxyClientChannelInitializer(final Channel channel, final BiConsumer<ChannelHandlerContext, Object> csm,
+            final ProxyListener lstn) {
         super();
 
+        serverChannel = Objects.requireNonNull(channel);
+        consumer = Objects.requireNonNull(csm);
         listener = Objects.requireNonNull(lstn);
     }
 
@@ -59,7 +75,7 @@ public final class MessageListenerChannelInitializer extends ChannelInitializer<
 
         // Message listener handler
         // Sends any message received by the channel to the listener
-        listenerHandler = new MessageListenerChannelHandler(listener);
+        listenerHandler = new MessageListenerChannelHandler(consumer);
 
         log.debug("Initializing channel");
 
@@ -67,7 +83,9 @@ public final class MessageListenerChannelInitializer extends ChannelInitializer<
             // Transforms message into a string
             .addLast(new LoggingHandler())
             // Adds listener handler
-            .addLast(listenerHandler);
+            .addLast(listenerHandler)
+            // Adds proxy handler
+            .addLast(new ProxyClientChannelHandler(serverChannel, listener));
 
         log.debug("Initialized channel");
     }

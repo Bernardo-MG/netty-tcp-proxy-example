@@ -66,7 +66,7 @@ public final class ProxyChannelInitializer extends ChannelInitializer<SocketChan
         ch.pipeline()
             // Logging handler
             .addLast(new LoggingHandler())
-            // Adds listener handler
+            // Adds proxy handler
             .addLast(new ProxyServerChannelHandler(host, port, listener));
 
         log.debug("Initialized channel");

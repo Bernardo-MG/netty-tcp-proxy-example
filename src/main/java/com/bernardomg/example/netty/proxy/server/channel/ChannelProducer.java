@@ -28,6 +28,8 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import com.bernardomg.example.netty.proxy.server.ProxyListener;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -37,17 +39,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ChannelProducer implements Function<ChannelHandlerContext, Channel> {
 
+    private final BiConsumer<ChannelHandlerContext, Object> consumer;
+
     private final String                                    host;
 
-    private final BiConsumer<ChannelHandlerContext, Object> listener;
+    /**
+     * Proxy listener. Extension hook which allows reacting to the server events.
+     */
+    private final ProxyListener                             listener;
 
     private final Integer                                   port;
 
-    public ChannelProducer(final String hst, final Integer prt, final BiConsumer<ChannelHandlerContext, Object> lstn) {
+    public ChannelProducer(final String hst, final Integer prt, final ProxyListener lstn,
+            final BiConsumer<ChannelHandlerContext, Object> csm) {
         super();
 
         host = Objects.requireNonNull(hst);
         port = Objects.requireNonNull(prt);
+        consumer = Objects.requireNonNull(csm);
         listener = Objects.requireNonNull(lstn);
     }
 
@@ -72,7 +81,7 @@ public final class ChannelProducer implements Function<ChannelHandlerContext, Ch
             // Configuration
             .option(ChannelOption.AUTO_READ, false)
             // Sets channel initializer which listens for responses
-            .handler(new MessageListenerChannelInitializer(listener));
+            .handler(new ProxyClientChannelInitializer(contextChannel, consumer, listener));
 
         return bootstrap.connect(host, port)
             .channel();
