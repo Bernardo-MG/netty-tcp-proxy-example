@@ -28,7 +28,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,12 +38,12 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public final class MessageListenerChannelHandler extends SimpleChannelInboundHandler<String> {
+public final class MessageListenerChannelHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * Channel listener. This will receive any message from the channel.
      */
-    private final BiConsumer<ChannelHandlerContext, String> listener;
+    private final BiConsumer<ChannelHandlerContext, Object> listener;
 
     /**
      * Constructs a channel handler which will send any message to the listener.
@@ -51,14 +51,14 @@ public final class MessageListenerChannelHandler extends SimpleChannelInboundHan
      * @param lstn
      *            listener to watch for channel messages
      */
-    public MessageListenerChannelHandler(final BiConsumer<ChannelHandlerContext, String> lstn) {
+    public MessageListenerChannelHandler(final BiConsumer<ChannelHandlerContext, Object> lstn) {
         super();
 
         listener = Objects.requireNonNull(lstn);
     }
 
     @Override
-    public final void channelRead0(final ChannelHandlerContext ctx, final String message) throws Exception {
+    public final void channelRead(final ChannelHandlerContext ctx, final Object message) throws Exception {
         log.debug("Received message {}", message);
 
         listener.accept(ctx, message);

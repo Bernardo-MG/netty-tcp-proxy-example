@@ -25,54 +25,49 @@
 package com.bernardomg.example.netty.proxy.server.channel;
 
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
-import io.netty.channel.ChannelHandlerContext;
+import com.bernardomg.example.netty.proxy.server.ProxyListener;
+
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Initializes the channel with a message listener. Any message received by the channel will be sent to the listener.
+ * Initializes the channel for a proxy.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
 @Slf4j
-public final class MessageListenerChannelInitializer extends ChannelInitializer<SocketChannel> {
+public final class ProxyServerChannelInitializer extends ChannelInitializer<SocketChannel> {
+
+    private final String        host;
 
     /**
-     * Message listener. This will receive any response from the channel.
+     * Proxy listener. Extension hook which allows reacting to the server events.
      */
-    private final BiConsumer<ChannelHandlerContext, String> listener;
+    private final ProxyListener listener;
 
-    public MessageListenerChannelInitializer(final BiConsumer<ChannelHandlerContext, String> lstn) {
+    private final Integer       port;
+
+    public ProxyServerChannelInitializer(final String hst, final Integer prt, final ProxyListener lstn) {
         super();
 
+        host = Objects.requireNonNull(hst);
+        port = Objects.requireNonNull(prt);
         listener = Objects.requireNonNull(lstn);
     }
 
     @Override
     protected final void initChannel(final SocketChannel ch) throws Exception {
-        final MessageListenerChannelHandler listenerHandler;
-
-        // Message listener handler
-        // Sends any message received by the channel to the listener
-        listenerHandler = new MessageListenerChannelHandler(listener);
-
         log.debug("Initializing channel");
 
         ch.pipeline()
-            // Transforms message into a string
-            .addLast("encoder", new StringEncoder())
-            .addLast("decoder", new StringDecoder())
             // Logging handler
             .addLast(new LoggingHandler())
-            // Adds listener handler
-            .addLast(listenerHandler);
+            // Adds proxy handler
+            .addLast(new ProxyServerChannelHandler(host, port, listener));
 
         log.debug("Initialized channel");
     }
