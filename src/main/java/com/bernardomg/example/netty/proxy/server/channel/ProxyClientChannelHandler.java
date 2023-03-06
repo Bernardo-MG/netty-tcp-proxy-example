@@ -41,89 +41,49 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapter {
-
-    /**
-     * Embedded client connection.
-     */
-    private Channel               clientChannel;
-
-    /**
-     * Supplier to acquire the client connection.
-     */
-    private final ChannelProducer clientChannelSupplier;
+public final class ProxyClientChannelHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * Proxy listener. Extension hook which allows reacting to the server events.
      */
-    private final ProxyListener   listener;
+    private final ProxyListener listener;
 
     /**
-     * Server request context. Required to redirect messages received by the client.
+     * Embedded server connection.
      */
-    private ChannelHandlerContext serverContext;
+    private final Channel       serverChannel;
 
-    public ProxyServerChannelHandler(final String hst, final Integer prt, final ProxyListener lstn) {
+    public ProxyClientChannelHandler(final Channel channel, final ProxyListener lstn) {
         super();
 
+        serverChannel = Objects.requireNonNull(channel);
         listener = Objects.requireNonNull(lstn);
-        clientChannelSupplier = new ChannelProducer(hst, prt, listener, this::handleClientResponse);
     }
 
     @Override
     public final void channelActive(final ChannelHandlerContext ctx) {
-        clientChannel = clientChannelSupplier.apply(ctx);
+        ctx.read();
     }
 
     @Override
     public final void channelInactive(final ChannelHandlerContext ctx) {
-        if (clientChannel.isActive()) {
-            log.debug("Closing client");
-            clientChannel.close();
+        if (serverChannel.isActive()) {
+            log.debug("Closing server");
+            serverChannel.close();
         }
     }
 
     @Override
-    public final void channelRead(final ChannelHandlerContext ctx, final Object message) throws Exception {
-        log.debug("Handling server request");
-
-        log.debug("Received server request: {}", message);
-
-        listener.onServerReceive(message);
-
-        if (!clientChannel.isActive()) {
-            log.error("Client channel inactive");
-        }
-
-        // Redirect to the target client
-        clientChannel.writeAndFlush(message)
+    public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+        serverChannel.writeAndFlush(msg)
             .addListener(future -> {
                 if (future.isSuccess()) {
                     log.debug("Successful client channel future");
-                    listener.onServerSend(message);
+                    listener.onClientSend(msg);
+                    ctx.channel()
+                        .read();
                 } else {
                     log.debug("Failed client channel future");
-                }
-            });
-
-        serverContext = ctx;
-    }
-
-    private final void handleClientResponse(final ChannelHandlerContext ctx, final Object message) {
-        log.debug("Handling client response");
-
-        log.debug("Received client response: {}", message);
-
-        listener.onClientReceive(message);
-
-        // Redirect to the source server
-        serverContext.writeAndFlush(message)
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful server channel future");
-                    listener.onClientSend(message);
-                } else {
-                    log.debug("Failed server channel future");
                 }
             });
     }

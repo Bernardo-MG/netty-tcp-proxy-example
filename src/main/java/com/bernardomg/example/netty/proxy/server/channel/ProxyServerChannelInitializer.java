@@ -30,7 +30,7 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public final class ProxyChannelInitializer extends ChannelInitializer<SocketChannel> {
+public final class ProxyServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     private final String        host;
 
@@ -51,7 +51,7 @@ public final class ProxyChannelInitializer extends ChannelInitializer<SocketChan
 
     private final Integer       port;
 
-    public ProxyChannelInitializer(final String hst, final Integer prt, final ProxyListener lstn) {
+    public ProxyServerChannelInitializer(final String hst, final Integer prt, final ProxyListener lstn) {
         super();
 
         host = Objects.requireNonNull(hst);
@@ -64,11 +64,9 @@ public final class ProxyChannelInitializer extends ChannelInitializer<SocketChan
         log.debug("Initializing channel");
 
         ch.pipeline()
-            // Transforms message into a string
-            .addLast("decoder", new StringDecoder())
-            // Adds event logger
-            .addLast(new EventLoggerChannelHandler("server"))
-            // Adds listener handler
+            // Logging handler
+            .addLast(new LoggingHandler())
+            // Adds proxy handler
             .addLast(new ProxyServerChannelHandler(host, port, listener));
 
         log.debug("Initialized channel");

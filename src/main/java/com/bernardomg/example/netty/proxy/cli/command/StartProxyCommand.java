@@ -27,6 +27,9 @@ package com.bernardomg.example.netty.proxy.cli.command;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+
 import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 import com.bernardomg.example.netty.proxy.server.NettyTcpProxyServer;
@@ -34,6 +37,7 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 import com.bernardomg.example.netty.proxy.server.Server;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Help;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -45,9 +49,15 @@ import picocli.CommandLine.Spec;
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-@Command(name = "tcp", description = "Starts a TCP proxy", mixinStandardHelpOptions = true,
+@Command(name = "start", description = "Starts a TCP proxy", mixinStandardHelpOptions = true,
         versionProvider = ManifestVersionProvider.class)
-public final class StartTcpProxyCommand implements Runnable {
+public final class StartProxyCommand implements Runnable {
+
+    /**
+     * Debug flag. Shows debug logs.
+     */
+    @Option(names = { "--debug" }, paramLabel = "flag", description = "Enable debug logs.", defaultValue = "false")
+    private Boolean     debug;
 
     /**
      * Server port.
@@ -76,14 +86,14 @@ public final class StartTcpProxyCommand implements Runnable {
     /**
      * Verbose mode. If active prints info into the console. Active by default.
      */
-    @Option(names = { "--verbose" }, paramLabel = "VERBOSE", description = "print information to console",
-            defaultValue = "true")
+    @Option(names = { "--verbose" }, paramLabel = "flag", description = "Print information to console.",
+            defaultValue = "true", showDefaultValue = Help.Visibility.ALWAYS)
     private Boolean     verbose;
 
     /**
      * Default constructor.
      */
-    public StartTcpProxyCommand() {
+    public StartProxyCommand() {
         super();
     }
 
@@ -92,6 +102,10 @@ public final class StartTcpProxyCommand implements Runnable {
         final PrintWriter   writer;
         final Server        server;
         final ProxyListener listener;
+
+        if (debug) {
+            activateDebugLog();
+        }
 
         if (verbose) {
             // Prints to console
@@ -106,6 +120,14 @@ public final class StartTcpProxyCommand implements Runnable {
         server = new NettyTcpProxyServer(port, targetHost, targetPort, listener);
 
         server.start();
+    }
+
+    /**
+     * Activates debug logs for the application.
+     */
+    private final void activateDebugLog() {
+        Configurator.setLevel("com.bernardomg.example", Level.DEBUG);
+        Configurator.setLevel("io.netty.handler.logging", Level.DEBUG);
     }
 
 }

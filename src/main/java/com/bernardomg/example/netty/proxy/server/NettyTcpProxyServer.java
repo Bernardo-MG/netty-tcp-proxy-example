@@ -26,7 +26,7 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.channel.ProxyChannelInitializer;
+import com.bernardomg.example.netty.proxy.server.channel.ProxyServerChannelInitializer;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -49,29 +49,40 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class NettyTcpProxyServer implements Server {
 
-    private EventLoopGroup       bossLoopGroup;
-
-    private ChannelGroup         channelGroup;
-
-    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    /**
+     * Group storing the server channel.
+     */
+    private ChannelGroup        channelGroup;
 
     /**
-     * Server listener. Extension hook which allows reacting to the server events.
+     * Server secondary event loop group.
      */
-    private final ProxyListener  listener;
+    private EventLoopGroup      childGroup;
+
+    /**
+     * Proxy listener. Extension hook which allows reacting to the proxy events.
+     */
+    private final ProxyListener listener;
+
+    /**
+     * Server main event loop group.
+     */
+    private EventLoopGroup      parentGroup;
 
     /**
      * Port which the server will listen to.
      */
-    private final Integer        port;
+    private final Integer       port;
 
-    private Channel              serverChannel;
+    /**
+     * Host for the server to which this client will connect.
+     */
+    private final String        targetHost;
 
-    private final String         targetHost;
-
-    private final Integer        targetPort;
-
-    private EventLoopGroup       workerLoopGroup;
+    /**
+     * Port for the server to which this client will connect.
+     */
+    private final Integer       targetPort;
 
     public NettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
@@ -85,16 +96,18 @@ public final class NettyTcpProxyServer implements Server {
 
     @Override
     public final void start() {
+        final Channel serverChannel;
+
         log.trace("Starting proxy");
 
         listener.onStart();
 
         // Initializes groups
-        bossLoopGroup = new NioEventLoopGroup();
+        parentGroup = new NioEventLoopGroup();
         channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-        workerLoopGroup = new NioEventLoopGroup();
+        childGroup = new NioEventLoopGroup();
 
-        serverChannel = getServerChannel();
+        serverChannel = connectoToServer();
 
         channelGroup.add(serverChannel);
 
@@ -107,24 +120,26 @@ public final class NettyTcpProxyServer implements Server {
 
         listener.onStop();
 
-        // Stop client
-        eventLoopGroup.shutdownGracefully();
-
         // Stop server
         channelGroup.close();
-        bossLoopGroup.shutdownGracefully();
-        workerLoopGroup.shutdownGracefully();
+        parentGroup.shutdownGracefully();
+        childGroup.shutdownGracefully();
 
         log.trace("Stopped proxy");
     }
 
-    private final Channel getServerChannel() {
+    /**
+     * Starts a server connection and returns a channel.
+     *
+     * @return channel for the server
+     */
+    private final Channel connectoToServer() {
         final ServerBootstrap bootstrap;
         final ChannelFuture   channelFuture;
 
         bootstrap = new ServerBootstrap()
             // Registers groups
-            .group(bossLoopGroup, workerLoopGroup)
+            .group(parentGroup, childGroup)
             // Defines channel
             .channel(NioServerSocketChannel.class)
             // Configuration
@@ -134,7 +149,7 @@ public final class NettyTcpProxyServer implements Server {
             .childOption(ChannelOption.SO_KEEPALIVE, true)
             .childOption(ChannelOption.TCP_NODELAY, true)
             // Child handler
-            .childHandler(new ProxyChannelInitializer(targetHost, targetPort, listener));
+            .childHandler(new ProxyServerChannelInitializer(targetHost, targetPort, listener));
 
         try {
             // Binds to the port
