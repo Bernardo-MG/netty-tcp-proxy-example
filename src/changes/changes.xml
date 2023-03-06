@@ -17,6 +17,9 @@
             <action dev="bmg" type="add">
                 Using Netty logging.
             </action>
+            <action dev="bmg" type="add">
+                Added debug option.
+            </action>
             <action dev="bmg" type="update">
                 Cleaned up code.
             </action>
