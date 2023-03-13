@@ -27,8 +27,6 @@ package com.bernardomg.example.netty.proxy.server.channel;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-import com.bernardomg.example.netty.proxy.server.ProxyListener;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
@@ -51,22 +49,15 @@ public final class ProxyClientChannelInitializer extends ChannelInitializer<Sock
     private final BiConsumer<ChannelHandlerContext, Object> consumer;
 
     /**
-     * Proxy listener. Extension hook which allows reacting to the server events.
-     */
-    private final ProxyListener                             listener;
-
-    /**
      * Embedded server connection.
      */
     private final Channel                                   serverChannel;
 
-    public ProxyClientChannelInitializer(final Channel channel, final BiConsumer<ChannelHandlerContext, Object> csm,
-            final ProxyListener lstn) {
+    public ProxyClientChannelInitializer(final Channel channel, final BiConsumer<ChannelHandlerContext, Object> csm) {
         super();
 
         serverChannel = Objects.requireNonNull(channel);
         consumer = Objects.requireNonNull(csm);
-        listener = Objects.requireNonNull(lstn);
     }
 
     @Override
@@ -85,7 +76,7 @@ public final class ProxyClientChannelInitializer extends ChannelInitializer<Sock
             // Adds listener handler
             .addLast(listenerHandler)
             // Adds proxy handler
-            .addLast(new ProxyClientChannelHandler(serverChannel, listener));
+            .addLast(new ProxyClientChannelHandler(serverChannel));
 
         log.debug("Initialized channel");
     }

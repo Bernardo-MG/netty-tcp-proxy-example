@@ -67,7 +67,7 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
         super();
 
         listener = Objects.requireNonNull(lstn);
-        clientChannelSupplier = new ChannelProducer(hst, prt, listener, this::handleClientResponse);
+        clientChannelSupplier = new ChannelProducer(hst, prt, this::handleClientResponse);
     }
 
     @Override
@@ -89,22 +89,14 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
 
         log.debug("Received server request: {}", message);
 
-        listener.onServerReceive(message);
+        listener.onRequest(message);
 
         if (!clientChannel.isActive()) {
             log.error("Client channel inactive");
         }
 
         // Redirect to the target client
-        clientChannel.writeAndFlush(message)
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful client channel future");
-                    listener.onServerSend(message);
-                } else {
-                    log.debug("Failed client channel future");
-                }
-            });
+        clientChannel.writeAndFlush(message);
 
         serverContext = ctx;
     }
@@ -114,18 +106,10 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
 
         log.debug("Received client response: {}", message);
 
-        listener.onClientReceive(message);
+        listener.onResponse(message);
 
         // Redirect to the source server
-        serverContext.writeAndFlush(message)
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful server channel future");
-                    listener.onClientSend(message);
-                } else {
-                    log.debug("Failed server channel future");
-                }
-            });
+        serverContext.writeAndFlush(message);
     }
 
 }
