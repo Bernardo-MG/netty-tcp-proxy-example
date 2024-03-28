@@ -24,10 +24,12 @@
 
 package com.bernardomg.example.netty.proxy.server.channel;
 
+import java.nio.charset.Charset;
 import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -85,11 +87,15 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
 
     @Override
     public final void channelRead(final ChannelHandlerContext ctx, final Object message) throws Exception {
-        log.debug("Handling server request");
+        log.debug("Handling request to server");
 
         log.debug("Received server request: {}", message);
 
-        listener.onRequest(message);
+        if(message instanceof ByteBuf) {
+            listener.onRequest(((ByteBuf)message).toString(Charset.defaultCharset()));
+        } else {
+            listener.onRequest(message.toString());
+        }
 
         if (!clientChannel.isActive()) {
             log.error("Client channel inactive");
@@ -106,7 +112,11 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
 
         log.debug("Received client response: {}", message);
 
-        listener.onResponse(message);
+        if(message instanceof ByteBuf) {
+            listener.onResponse(((ByteBuf)message).toString(Charset.defaultCharset()));
+        } else {
+            listener.onResponse(message.toString());
+        }
 
         // Redirect to the source server
         serverContext.writeAndFlush(message);
