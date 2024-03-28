@@ -26,8 +26,6 @@ package com.bernardomg.example.netty.proxy.server.channel;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.ProxyListener;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -44,20 +42,14 @@ import lombok.extern.slf4j.Slf4j;
 public final class ProxyClientChannelHandler extends ChannelInboundHandlerAdapter {
 
     /**
-     * Proxy listener. Extension hook which allows reacting to the server events.
-     */
-    private final ProxyListener listener;
-
-    /**
      * Embedded server connection.
      */
-    private final Channel       serverChannel;
+    private final Channel serverChannel;
 
-    public ProxyClientChannelHandler(final Channel channel, final ProxyListener lstn) {
+    public ProxyClientChannelHandler(final Channel channel) {
         super();
 
         serverChannel = Objects.requireNonNull(channel);
-        listener = Objects.requireNonNull(lstn);
     }
 
     @Override
@@ -75,17 +67,8 @@ public final class ProxyClientChannelHandler extends ChannelInboundHandlerAdapte
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
-        serverChannel.writeAndFlush(msg)
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful client channel future");
-                    listener.onClientSend(msg);
-                    ctx.channel()
-                        .read();
-                } else {
-                    log.debug("Failed client channel future");
-                }
-            });
+        // FIXME: this seems to be duplicated on ProxyServerChannelHandler
+        serverChannel.writeAndFlush(msg);
     }
 
 }

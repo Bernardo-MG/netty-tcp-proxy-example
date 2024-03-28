@@ -10,7 +10,7 @@
    <parent>
       <groupId>com.bernardomg.maven</groupId>
       <artifactId>base-pom</artifactId>
-      <version>1.5.3</version>
+      <version>1.5.4</version>
    </parent>
 
    <!-- ********************************************** -->
@@ -19,7 +19,7 @@
 
    <groupId>com.bernardomg.example</groupId>
    <artifactId>netty-tcp-proxy-example</artifactId>
-   <version>1.0.1</version>
+   <version>1.0.2</version>
    <packaging>jar</packaging>
 
    <name>Netty TCP Proxy Example</name>
@@ -119,11 +119,11 @@
       <!-- ============================================== -->
       <bernardomg.cli.manifestVersion>1.0.0</bernardomg.cli.manifestVersion>
       <junit.jupiter.version>5.9.2</junit.jupiter.version>
-      <netty.version>4.1.89.Final</netty.version>
-      <log4j.version>2.19.0</log4j.version>
-      <lombok.version>1.18.26</lombok.version>
-      <picocli.version>4.7.1</picocli.version>
-      <slf4j.version>2.0.6</slf4j.version>
+      <netty.version>4.1.108.Final</netty.version>
+      <log4j.version>2.23.1</log4j.version>
+      <lombok.version>1.18.32</lombok.version>
+      <picocli.version>4.7.5</picocli.version>
+      <slf4j.version>2.0.12</slf4j.version>
       <!-- ============================================== -->
       <!-- ============== PLUGINS VERSIONS ============== -->
       <!-- ============================================== -->
@@ -137,10 +137,6 @@
       <!-- ================= MAVEN SITE ================= -->
       <!-- ============================================== -->
       <site.skin.version>2.3.1</site.skin.version>
-      <mavenURL>https://mvnrepository.com/artifact/${project.groupId}/${project.artifactId}</mavenURL>
-      <githubArtifactURL>
-         <![CDATA[https://github.com/bernardo-mg?tab=packages&amp;repo_name={project.artifactId}]]>
-      </githubArtifactURL>
       <!-- ============================================== -->
       <!-- ================= EXECUTABLE ================= -->
       <!-- ============================================== -->
@@ -256,7 +252,7 @@
    <!-- ********************************************** -->
 
    <build>
-      <defaultGoal>clean package install</defaultGoal>
+      <defaultGoal>clean package</defaultGoal>
       <pluginManagement>
          <plugins>
             <plugin>

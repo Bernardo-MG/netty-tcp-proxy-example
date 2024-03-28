@@ -24,10 +24,12 @@
 
 package com.bernardomg.example.netty.proxy.server.channel;
 
+import java.nio.charset.Charset;
 import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -67,7 +69,7 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
         super();
 
         listener = Objects.requireNonNull(lstn);
-        clientChannelSupplier = new ChannelProducer(hst, prt, listener, this::handleClientResponse);
+        clientChannelSupplier = new ChannelProducer(hst, prt, this::handleClientResponse);
     }
 
     @Override
@@ -85,26 +87,22 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
 
     @Override
     public final void channelRead(final ChannelHandlerContext ctx, final Object message) throws Exception {
-        log.debug("Handling server request");
+        log.debug("Handling request to server");
 
         log.debug("Received server request: {}", message);
 
-        listener.onServerReceive(message);
+        if(message instanceof ByteBuf) {
+            listener.onRequest(((ByteBuf)message).toString(Charset.defaultCharset()));
+        } else {
+            listener.onRequest(message.toString());
+        }
 
         if (!clientChannel.isActive()) {
             log.error("Client channel inactive");
         }
 
         // Redirect to the target client
-        clientChannel.writeAndFlush(message)
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful client channel future");
-                    listener.onServerSend(message);
-                } else {
-                    log.debug("Failed client channel future");
-                }
-            });
+        clientChannel.writeAndFlush(message);
 
         serverContext = ctx;
     }
@@ -114,18 +112,14 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
 
         log.debug("Received client response: {}", message);
 
-        listener.onClientReceive(message);
+        if(message instanceof ByteBuf) {
+            listener.onResponse(((ByteBuf)message).toString(Charset.defaultCharset()));
+        } else {
+            listener.onResponse(message.toString());
+        }
 
         // Redirect to the source server
-        serverContext.writeAndFlush(message)
-            .addListener(future -> {
-                if (future.isSuccess()) {
-                    log.debug("Successful server channel future");
-                    listener.onClientSend(message);
-                } else {
-                    log.debug("Failed server channel future");
-                }
-            });
+        serverContext.writeAndFlush(message);
     }
 
 }

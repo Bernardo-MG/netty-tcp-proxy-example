@@ -20,14 +20,21 @@ To show other commands:
 java -jar target/proxy.jar -h
 ```
 
-## More Examples
+## Other Netty examples
 
-This project is part of a series of examples:
+### TCP
+
+- [Netty TCP Client Example](https://github.com/Bernardo-MG/netty-tcp-client-example)
+- [Netty TCP Server Example](https://github.com/Bernardo-MG/netty-tcp-server-example)
 - [Netty TCP Proxy Example](https://github.com/Bernardo-MG/netty-tcp-proxy-example)
+
+### TCP Reactive
+
+- [Reactor Netty TCP Client Example](https://github.com/Bernardo-MG/reactor-netty-tcp-client-example)
+- [Reactor Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-netty-tcp-server-example)
 - [Reactor Netty TCP Proxy Example](https://github.com/Bernardo-MG/reactor-netty-tcp-proxy-example)
 
-But there are more Netty examples:
-- [Netty TCP Client Example](https://github.com/Bernardo-MG/netty-tcp-client-example)
-- [Reactor Netty TCP Client Example](https://github.com/Bernardo-MG/reactor-netty-tcp-client-example)
-- [Netty TCP Server Example](https://github.com/Bernardo-MG/netty-tcp-server-example)
-- [Reactor Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-netty-tcp-server-example)
+### HTTP
+
+- [Netty HTTP Client Example](https://github.com/Bernardo-MG/reactor-netty-http-client-example)
+- [Netty HTTP Server Example](https://github.com/Bernardo-MG/reactor-netty-http-server-example)
