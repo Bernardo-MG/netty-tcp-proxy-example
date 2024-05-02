@@ -91,8 +91,8 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
 
         log.debug("Received server request: {}", message);
 
-        if(message instanceof ByteBuf) {
-            listener.onRequest(((ByteBuf)message).toString(Charset.defaultCharset()));
+        if (message instanceof ByteBuf) {
+            listener.onRequest(((ByteBuf) message).toString(Charset.defaultCharset()));
         } else {
             listener.onRequest(message.toString());
         }
@@ -112,8 +112,8 @@ public final class ProxyServerChannelHandler extends ChannelInboundHandlerAdapte
 
         log.debug("Received client response: {}", message);
 
-        if(message instanceof ByteBuf) {
-            listener.onResponse(((ByteBuf)message).toString(Charset.defaultCharset()));
+        if (message instanceof ByteBuf) {
+            listener.onResponse(((ByteBuf) message).toString(Charset.defaultCharset()));
         } else {
             listener.onResponse(message.toString());
         }
