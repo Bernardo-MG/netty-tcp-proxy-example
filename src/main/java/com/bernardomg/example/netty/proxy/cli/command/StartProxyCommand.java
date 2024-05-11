@@ -30,7 +30,7 @@ import java.io.PrintWriter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 
-import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
+import com.bernardomg.example.netty.proxy.cli.TransactionPrinterListener;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 import com.bernardomg.example.netty.proxy.server.NettyTcpProxyServer;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
@@ -56,7 +56,7 @@ public final class StartProxyCommand implements Runnable {
      * Debug flag. Shows debug logs.
      */
     @Option(names = { "--debug" }, paramLabel = "flag", description = "Enable debug logs.", defaultValue = "false")
-    private Boolean     debug;
+    private boolean     debug;
 
     /**
      * Server port.
@@ -88,7 +88,7 @@ public final class StartProxyCommand implements Runnable {
      */
     @Option(names = { "--verbose" }, paramLabel = "flag", description = "Print information to console.",
             defaultValue = "true", showDefaultValue = Help.Visibility.ALWAYS)
-    private Boolean     verbose;
+    private boolean     verbose;
 
     /**
      * Default constructor.
@@ -116,7 +116,7 @@ public final class StartProxyCommand implements Runnable {
             writer = new PrintWriter(OutputStream.nullOutputStream());
         }
 
-        listener = new CliWriterProxyListener(port, targetHost, targetPort, writer);
+        listener = new TransactionPrinterListener(port, targetHost, targetPort, writer);
         server = new NettyTcpProxyServer(port, targetHost, targetPort, listener);
 
         server.start();
